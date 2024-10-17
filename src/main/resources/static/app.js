@@ -51,38 +51,36 @@ var app = (function () {
                 var mousePos = getMousePosition(evt);
                 app.publishPoint(mousePos.x, mousePos.y);
             });
-           button.addEventListener('click', function (evt) {
-               valor = document.getElementById("draw").value;
+            button.addEventListener('click', function (evt) {
+                valor = document.getElementById("draw").value;
 
-               // Verificar que el campo no esté vacío y que el valor sea numérico
-               if (valor && !isNaN(valor)) {
-                   // Limpiar el canvas antes de suscribirse y dibujar
-                   clearCanvas();
+                // Verificar que el campo no esté vacío y que el valor sea numérico
+                if (valor && !isNaN(valor)) {
+                    // Limpiar el canvas antes de suscribirse y dibujar
+                    clearCanvas();
 
-                   // Desconectar si ya hay una conexión activa
-                   if (stompClient && stompClient.connected) {
-                       stompClient.deactivate({
-                           onComplete: function () {
-                               console.log('Disconnected from previous subscription.');
-                               connectAndSubscribe(valor);
-                           }
-                       });
-                   } else {
-                       connectAndSubscribe(valor);
-                   }
+                    // Desconectar si ya hay una conexión activa
+                    if (stompClient !== null) {
+                        stompClient.disconnect(function () {
+                            console.log('Disconnected from previous subscription.');
+                            connectAndSubscribe(valor);
+                        });
+                    } else {
+                        connectAndSubscribe(valor);
+                    }
 
-                   console.log('Attempting to connect with valor: ' + valor);
-               } else {
-                   alert('Por favor ingrese un número válido.');
-               }
-           });
-           
-           // Función para limpiar el canvas
-           var clearCanvas = function () {
-               var canvas = document.getElementById("canvas");
-               var ctx = canvas.getContext("2d");
-               ctx.clearRect(0, 0, canvas.width, canvas.height);
-           };
+                    console.log('Attempting to connect with valor: ' + valor);
+                } else {
+                    alert('Por favor ingrese un número válido.');
+                }
+            });
+
+            // Función para limpiar el canvas
+            var clearCanvas = function () {
+                var canvas = document.getElementById("canvas");
+                var ctx = canvas.getContext("2d");
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            };
         },
 
         publishPoint: function (px, py) {
@@ -91,7 +89,7 @@ var app = (function () {
             addPointToCanvas(pt);
 
             // Publish the event
-            stompClient.send(`/topic/newpoint.${valor}`, {}, JSON.stringify(pt));
+            stompClient.send(`/app/newpoint.${valor}`, {}, JSON.stringify(pt));
         },
 
         disconnect: function () {
