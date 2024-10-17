@@ -1,5 +1,5 @@
 var app = (function () {
-
+    var valor;
     class Point {
         constructor(x, y) {
             this.x = x;
@@ -26,7 +26,7 @@ var app = (function () {
         };
     };
 
-    var connectAndSubscribe = function () {
+    var connectAndSubscribe = function (number) {
         console.info('Connecting to WS...');
         var socket = new SockJS('/stompendpoint');
         stompClient = Stomp.over(socket);
@@ -34,7 +34,7 @@ var app = (function () {
         // Subscribe to /topic/newpoint when connections succeed
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/newpoint', function (eventbody) {
+            stompClient.subscribe(`/topic/newpoint.${number}`, function (eventbody) {
                 var theObject = JSON.parse(eventbody.body);
                 addPointToCanvas(theObject);
             });
@@ -45,16 +45,44 @@ var app = (function () {
 
         init: function () {
             var canvas = document.getElementById("canvas");
-
-            // Websocket connection
-            connectAndSubscribe();
-
+            var button = document.getElementById("connect");
             // Add click event listener to canvas
             canvas.addEventListener('click', function (evt) {
                 var mousePos = getMousePosition(evt);
                 app.publishPoint(mousePos.x, mousePos.y);
-                console.log('Mouse position: ' + mousePos.x + ',' + mousePos.y);
             });
+           button.addEventListener('click', function (evt) {
+               valor = document.getElementById("draw").value;
+
+               // Verificar que el campo no esté vacío y que el valor sea numérico
+               if (valor && !isNaN(valor)) {
+                   // Limpiar el canvas antes de suscribirse y dibujar
+                   clearCanvas();
+
+                   // Desconectar si ya hay una conexión activa
+                   if (stompClient && stompClient.connected) {
+                       stompClient.deactivate({
+                           onComplete: function () {
+                               console.log('Disconnected from previous subscription.');
+                               connectAndSubscribe(valor);
+                           }
+                       });
+                   } else {
+                       connectAndSubscribe(valor);
+                   }
+
+                   console.log('Attempting to connect with valor: ' + valor);
+               } else {
+                   alert('Por favor ingrese un número válido.');
+               }
+           });
+           
+           // Función para limpiar el canvas
+           var clearCanvas = function () {
+               var canvas = document.getElementById("canvas");
+               var ctx = canvas.getContext("2d");
+               ctx.clearRect(0, 0, canvas.width, canvas.height);
+           };
         },
 
         publishPoint: function (px, py) {
@@ -63,7 +91,7 @@ var app = (function () {
             addPointToCanvas(pt);
 
             // Publish the event
-            stompClient.send("/topic/newpoint", {}, JSON.stringify(pt));
+            stompClient.send(`/topic/newpoint.${valor}`, {}, JSON.stringify(pt));
         },
 
         disconnect: function () {
