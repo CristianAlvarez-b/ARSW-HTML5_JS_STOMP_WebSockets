@@ -16,6 +16,26 @@ var app = (function () {
         ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
         ctx.stroke();
     };
+    var addPolygonCanvas = function (polygon) {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+
+        // Comienza a dibujar el polígono
+        ctx.beginPath();
+        if (polygon.points.length > 0) {
+            // Mueve el "lápiz" al primer punto
+            ctx.moveTo(polygon.points[0].x, polygon.points[0].y);
+
+            // Dibuja líneas a cada uno de los puntos
+            for (var i = 1; i < polygon.points.length; i++) {
+                ctx.lineTo(polygon.points[i].x, polygon.points[i].y);
+            }
+
+            // Cierra el polígono
+            ctx.closePath();
+            ctx.stroke(); // Dibuja el contorno
+        }
+    };
 
     var getMousePosition = function (evt) {
         var canvas = document.getElementById("canvas");
@@ -38,6 +58,10 @@ var app = (function () {
                 var theObject = JSON.parse(eventbody.body);
                 addPointToCanvas(theObject);
             });
+            stompClient.subscribe(`/topic/newpolygon.${number}`, function (eventbody) {
+                var theObject = JSON.parse(eventbody.body);
+                addPolygonCanvas(theObject);
+            });
         });
     };
 
@@ -55,7 +79,7 @@ var app = (function () {
                 valor = document.getElementById("draw").value;
 
                 // Verificar que el campo no esté vacío y que el valor sea numérico
-                if (valor && !isNaN(valor)) {
+                if (valor && !isNaN(valor) && Number.isInteger(Number(valor)) && Number(valor) > 0) {
                     // Limpiar el canvas antes de suscribirse y dibujar
                     clearCanvas();
 
