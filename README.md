@@ -1,8 +1,10 @@
 ### Escuela Colombiana de Ingeniería
 ### Arquitecturas de Software - ARSW
 ### Laboratorio - Broker de Mensajes STOMP con WebSockets + HTML5 Canvas.
-
-
+## **Elaborado por**
+## Cristian Alvarez - Juliana Briceño
+> [!WARNING]
+> Execute the program with **JAVA 8**.
 
 - Conectarse con un botón
 - publicar con eventos de mouse
